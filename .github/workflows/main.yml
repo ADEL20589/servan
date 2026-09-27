@@ -23,10 +23,25 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build release APK
-        run: flutter build apk --release
+      - name: Build release APK and save log
+        shell: bash
+        run: |
+          set +e
+          flutter build apk --release -v > build.log 2>&1
+          BUILD_EXIT_CODE=$?
+          echo "BUILD_EXIT_CODE=$BUILD_EXIT_CODE" >> build.log
+          exit $BUILD_EXIT_CODE
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SERVAN-BUILD-LOG
+          path: build.log
+          if-no-files-found: warn
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: SERVAN-MOBILE-R06.0.0-APK
